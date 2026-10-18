@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Report Automator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Public Sans',system-ui,sans-serif;background:#F6F7F9;color:#15191F;line-height:1.5}
+  h1,h2,h3{font-family:'Archivo',system-ui,sans-serif;margin:0}
+  a{color:#15614A}
+  header{background:#fff;border-bottom:1px solid #E2E6EB}
+  .bar{max-width:980px;margin:0 auto;padding:16px 24px;display:flex;align-items:center;gap:10px}
+  .mark{width:28px;height:28px;border-radius:7px;background:#15614A}
+  .brand{font-family:'Archivo',sans-serif;font-weight:700;font-size:17px}
+  main{max-width:980px;margin:0 auto;padding:36px 24px 64px}
+  .card{background:#fff;border:1px solid #E2E6EB;border-radius:13px;padding:28px;margin-bottom:20px}
+  .lede{font-size:16px;color:#596273;margin:8px 0 28px}
+  label{display:block;font-size:14px;font-weight:500;color:#3C4555;margin-bottom:6px}
+  input[type=text],input[type=file],select{width:100%;font-family:inherit;font-size:15px;padding:11px 13px;
+    border:1px solid #D4DAE2;border-radius:8px;background:#fff;color:#15191F;min-height:44px}
+  input[type=color]{width:64px;height:44px;padding:4px;border:1px solid #D4DAE2;border-radius:8px;background:#fff}
+  .field{margin-bottom:20px}
+  .row{display:flex;flex-wrap:wrap;gap:18px}
+  .row>.field{flex:1 1 220px;min-width:0}
+  button{font-family:inherit;font-size:15px;font-weight:600;color:#fff;background:#15614A;border:none;
+    border-radius:9px;padding:14px 26px;min-height:44px;cursor:pointer}
+  button:hover{background:#0E4435}
+  button[disabled]{background:#9AA3B2;cursor:default}
+  .tablewrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:11.5px;letter-spacing:.4px;color:#7A8496;font-weight:600;
+    padding:0 10px 10px 0;border-bottom:1px solid #E2E6EB;white-space:nowrap}
+  td{padding:10px 10px 10px 0;border-bottom:1px solid #EDF0F4;vertical-align:middle}
+  code{font-family:ui-monospace,monospace;font-size:13px}
+  .muted{color:#7A8496;font-size:13px}
+  .ok{display:inline-block;background:#E7F0EC;color:#0E4435;font-size:12.5px;font-weight:600;
+    padding:4px 11px;border-radius:999px;white-space:nowrap}
+  .warn{display:inline-block;background:#FAEDE6;color:#7C3415;font-size:12.5px;font-weight:600;
+    padding:4px 11px;border-radius:999px;white-space:nowrap}
+  .drop{border:2px dashed #C3CBD6;border-radius:12px;padding:40px 24px;text-align:center;background:#FBFCFD}
+  .err{background:#FAEDE6;color:#7C3415;border-radius:9px;padding:14px 16px;margin-bottom:20px;font-size:14.5px}
+  .hidden{display:none}
+  @media (max-width:640px){ main{padding:24px 16px 48px} .card{padding:20px} }
+</style>
+</head>
+<body>
+<header><div class="bar"><span class="mark"></span><span class="brand">Report Automator</span></div></header>
+<main>
+
+  <div id="err" class="err hidden"></div>
+
+  <section id="step-upload">
+    <h1 style="font-size:30px;letter-spacing:-.7px">Turn a spreadsheet into a report</h1>
+    <p class="lede">Your file is read in this browser and never uploaded. Only the totals are sent, to draw the PDF.</p>
+    <div class="card">
+      <div class="drop">
+        <div class="field" style="max-width:420px;margin:0 auto 18px">
+          <label for="file">Choose a CSV file</label>
+          <input id="file" type="file" accept=".csv,.tsv,.txt">
+        </div>
+        <p class="muted" style="margin:0">CSV or TSV. For Excel, use File &rsaquo; Save As &rsaquo; CSV first.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="step-map" class="hidden">
+    <h1 style="font-size:28px;letter-spacing:-.6px">Check the columns</h1>
+    <p class="lede" id="map-lede"></p>
+    <div class="card">
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>YOUR COLUMN</th><th>SAMPLE</th><th style="min-width:200px">MEANS</th><th>STATUS</th></tr></thead>
+          <tbody id="map-rows"></tbody>
+        </table>
+      </div>
+
+      <h2 style="font-size:17px;margin:32px 0 18px">Report style</h2>
+      <div class="row">
+        <div class="field">
+          <label for="template">Template</label>
+          <select id="template">
+            <option value="financial">Financial summary — revenue, growth, averages</option>
+            <option value="marketing">Marketing performance — spend and share by channel</option>
+            <option value="operations">Operations review — volume, spread, busiest period</option>
+          </select>
+        </div>
+      </div>
+
+      <h2 style="font-size:17px;margin:32px 0 18px">Branding</h2>
+      <div class="row">
+        <div class="field">
+          <label for="title">Report title</label>
+          <input id="title" type="text">
+        </div>
+        <div class="field">
+          <label for="client">Prepared for</label>
+          <input id="client" type="text" value="[CLIENT NAME]">
+        </div>
+      </div>
+      <div class="row">
+        <div class="field" style="flex:0 0 120px">
+          <label for="color">Brand colour</label>
+          <input id="color" type="color" value="#15614A">
+        </div>
+        <div class="field">
+          <label for="currency">Currency prefix</label>
+          <input id="currency" type="text" value="AED">
+        </div>
+        <div class="field">
+          <label for="logo">Logo (optional)</label>
+          <input id="logo" type="file" accept=".png,.jpg,.jpeg,.gif">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:16px;align-items:center;margin-top:10px">
+        <button id="go" type="button">Generate the PDF</button>
+        <a href="#" id="restart" class="muted">Start over</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATE_HINTS = ["date","dt","day","month","period","created","closed","order","invoice","timestamp","time"];
+  var VALUE_HINTS = ["amount","value","revenue","total","price","sales","net","gross","paid","sum","cost","spend","balance","fee","deal","charge","income"];
+  var LABEL_HINTS = ["name","agent","customer","client","product","category","item","rep","staff","doctor","type","channel","source","property","service","department","branch"];
+
+  var state = { headers: [], rows: [], picks: {}, logo: null, fileName: "" };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function showError(msg) {
+    var box = $("err");
+    box.textContent = msg;
+    box.classList.remove("hidden");
+    window.scrollTo(0, 0);
+  }
+  function clearError() { $("err").classList.add("hidden"); }
+
+  // ---------------------------------------------------------------- parsing
+
+  function splitLine(line, delim) {
+    var out = [], cur = "", inQ = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (inQ) {
+        if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+        else if (ch === '"') { inQ = false; }
+        else { cur += ch; }
+      } else if (ch === '"') { inQ = true; }
+      else if (ch === delim) { out.push(cur); cur = ""; }
+      else { cur += ch; }
+    }
+    out.push(cur);
+    return out;
+  }
+
+  function parseCSV(text) {
+    text = text.replace(/^﻿/, "").replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+    var lines = text.split("\n").filter(function (l) { return l.trim() !== ""; });
+    if (!lines.length) return { headers: [], rows: [] };
+
+    var first = lines[0];
+    var delim = ",";
+    [";", "\t", "|"].forEach(function (d) {
+      if (first.split(d).length > first.split(delim).length) delim = d;
+    });
+
+    var headers = splitLine(first, delim).map(function (h) { return h.trim(); });
+    var rows = [];
+    for (var i = 1; i < lines.length; i++) {
+      var cells = splitLine(lines[i], delim);
+      var rec = {};
+      for (var j = 0; j < headers.length; j++) rec[headers[j]] = (cells[j] || "").trim();
+      rows.push(rec);
+    }
+    return { headers: headers, rows: rows };
+  }
+
+  function parseNumber(raw) {
+    if (raw === null || raw === undefined) return null;
+    var s = String(raw).trim();
+    if (!s) return null;
+    var neg = s.charAt(0) === "(" && s.charAt(s.length - 1) === ")";
+    s = s.replace(/[^0-9.\-]/g, "");
+    if (!s || s === "-" || s === "." || s === "-.") return null;
+    var n = parseFloat(s);
+    if (isNaN(n)) return null;
+    return neg ? -n : n;
+  }
+
+  function parseDate(raw) {
+    if (!raw) return null;
+    var s = String(raw).trim();
+    var m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (m) return { y: +m[1], m: +m[2] };
+    m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (m) {
+      var a = +m[1], b = +m[2];
+      // day-first unless the first number cannot be a day
+      if (a > 12) return { y: +m[3], m: b };
+      if (b > 12) return { y: +m[3], m: a };
+      return { y: +m[3], m: b };
+    }
+    var d = new Date(s);
+    if (!isNaN(d.getTime())) return { y: d.getFullYear(), m: d.getMonth() + 1 };
+    return null;
+  }
+
+  function hintScore(header, hints) {
+    var h = header.toLowerCase().replace(/\s+/g, "_");
+    for (var i = 0; i < hints.length; i++) if (h.indexOf(hints[i]) !== -1) return 1;
+    return 0;
+  }
+
+  function detect(headers, rows) {
+    var sample = rows.slice(0, 200);
+    var dateScore = {}, valueScore = {}, labelScore = {};
+
+    headers.forEach(function (h) {
+      var vals = sample.map(function (r) { return r[h]; }).filter(function (v) { return v !== "" && v != null; });
+      if (!vals.length) { dateScore[h] = valueScore[h] = labelScore[h] = 0; return; }
+
+      var dHit = vals.filter(function (v) { return parseDate(v) !== null; }).length / vals.length;
+      var nHit = vals.filter(function (v) { return parseNumber(v) !== null; }).length / vals.length;
+      dateScore[h] = dHit + hintScore(h, DATE_HINTS);
+      valueScore[h] = nHit + hintScore(h, VALUE_HINTS);
+
+      var uniq = {}, count = 0;
+      vals.forEach(function (v) { if (!uniq[v]) { uniq[v] = 1; count++; } });
+      var spread = (count <= 1 || count > vals.length * 0.6) ? 0 : 1 - count / vals.length;
+      labelScore[h] = spread + hintScore(h, LABEL_HINTS);
+    });
+
+    function best(scores, exclude, floor) {
+      var pick = null, top = floor;
+      headers.forEach(function (h) {
+        if (exclude.indexOf(h) !== -1) return;
+        if (scores[h] >= top) { top = scores[h]; pick = h; }
+      });
+      return pick;
+    }
+
+    var d = best(dateScore, [], 0.6);
+    var v = best(valueScore, [d], 0.75);
+    var l = best(labelScore, [d, v], 0.5);
+    return { date: d, value: v, label: l };
+  }
+
+  // ---------------------------------------------------------------- aggregate
+
+  function aggregate() {
+    var dateCol = state.picks.date, valueCol = state.picks.value, labelCol = state.picks.label;
+    var total = 0, count = 0, periods = {}, byLabel = {};
+
+    state.rows.forEach(function (r) {
+      var val = valueCol ? parseNumber(r[valueCol]) : null;
+      if (valueCol && val === null) return;
+      count++;
+      if (val !== null) total += val;
+
+      if (dateCol) {
+        var d = parseDate(r[dateCol]);
+        if (d) {
+          var key = d.y + "-" + (d.m < 10 ? "0" + d.m : d.m);
+          periods[key] = (periods[key] || 0) + (val || 0);
+        }
+      }
+      if (labelCol) {
+        var name = String(r[labelCol] || "").trim() || "Unspecified";
+        if (!byLabel[name]) byLabel[name] = { n: 0, sum: 0 };
+        byLabel[name].n++;
+        byLabel[name].sum += (val || 0);
+      }
+    });
+
+    var pKeys = Object.keys(periods).sort();
+    var pairs = pKeys.map(function (k) { return [k, periods[k]]; });
+
+    var change = null;
+    if (pairs.length >= 2) {
+      var prev = pairs[pairs.length - 2][1], last = pairs[pairs.length - 1][1];
+      if (prev) change = (last - prev) / Math.abs(prev) * 100;
+    }
+
+    var labels = Object.keys(byLabel).map(function (k) {
+      return [k, byLabel[k].n, byLabel[k].sum];
+    }).sort(function (a, b) { return b[2] - a[2]; });
+
+    var bestPeriod = null, bestVal = -Infinity;
+    pairs.forEach(function (p) { if (p[1] > bestVal) { bestVal = p[1]; bestPeriod = p[0]; } });
+
+    return {
+      total: total,
+      count: count,
+      average: count ? total / count : 0,
+      change: change,
+      groups: labels.length,
+      best_period: bestPeriod,
+      periods: pairs,
+      labels: labels.slice(0, 400)
+    };
+  }
+
+  // ---------------------------------------------------------------- mapping UI
+
+  var FIELDS = [["", "— ignore —"], ["date", "Date"],
+                ["value", "Revenue / amount"], ["label", "Label / category"]];
+
+  function renderMapping(guess) {
+    var tbody = $("map-rows");
+    tbody.innerHTML = "";
+    var matched = 0;
+    var reverse = {};
+    Object.keys(guess).forEach(function (k) { if (guess[k]) reverse[guess[k]] = k; });
+
+    state.headers.forEach(function (h) {
+      var sample = "";
+      for (var i = 0; i < state.rows.length; i++) {
+        if (String(state.rows[i][h] || "").trim()) { sample = String(state.rows[i][h]).slice(0, 28); break; }
+      }
+      var chosen = reverse[h] || "";
+      if (chosen) matched++;
+
+      var tr = document.createElement("tr");
+
+      var tdName = document.createElement("td");
+      var codeEl = document.createElement("code");
+      codeEl.textContent = h;
+      tdName.appendChild(codeEl);
+
+      var tdSample = document.createElement("td");
+      tdSample.className = "muted";
+      var codeS = document.createElement("code");
+      codeS.textContent = sample;
+      tdSample.appendChild(codeS);
+
+      var tdSel = document.createElement("td");
+      var sel = document.createElement("select");
+      sel.setAttribute("aria-label", "Meaning for " + h);
+      FIELDS.forEach(function (f) {
+        var opt = document.createElement("option");
+        opt.value = f[0];
+        opt.textContent = f[1];
+        if (f[0] === chosen) opt.selected = true;
+        sel.appendChild(opt);
+      });
+      sel.addEventListener("change", function () {
+        Object.keys(state.picks).forEach(function (k) {
+          if (state.picks[k] === h) delete state.picks[k];
+        });
+        if (sel.value) state.picks[sel.value] = h;
+      });
+      tdSel.appendChild(sel);
+
+      var tdStatus = document.createElement("td");
+      var chip = document.createElement("span");
+      chip.className = chosen ? "ok" : "warn";
+      chip.textContent = chosen ? "matched" : "your call";
+      tdStatus.appendChild(chip);
+
+      tr.appendChild(tdName); tr.appendChild(tdSample);
+      tr.appendChild(tdSel); tr.appendChild(tdStatus);
+      tbody.appendChild(tr);
+    });
+
+    $("map-lede").textContent = state.fileName + " · " + state.rows.length.toLocaleString() +
+      " rows · " + matched + " of " + state.headers.length + " columns matched automatically.";
+  }
+
+  // ---------------------------------------------------------------- events
+
+  $("file").addEventListener("change", function (e) {
+    clearError();
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (!/\.(csv|tsv|txt)$/i.test(f.name)) {
+      showError("That is not a spreadsheet. This tool reads CSV and TSV — in Excel use File › Save As › CSV first.");
+      return;
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      var parsed = parseCSV(String(reader.result));
+      if (!parsed.rows.length) { showError("The file opened but had no rows under the header."); return; }
+      state.headers = parsed.headers;
+      state.rows = parsed.rows;
+      state.fileName = f.name;
+      var guess = detect(parsed.headers, parsed.rows);
+      state.picks = {};
+      Object.keys(guess).forEach(function (k) { if (guess[k]) state.picks[k] = guess[k]; });
+      renderMapping(guess);
+      var stem = f.name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ");
+      $("title").value = stem.charAt(0).toUpperCase() + stem.slice(1) + " Report";
+      $("step-upload").classList.add("hidden");
+      $("step-map").classList.remove("hidden");
+      window.scrollTo(0, 0);
+    };
+    reader.onerror = function () { showError("That file could not be read."); };
+    reader.readAsText(f);
+  });
+
+  $("logo").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) { state.logo = null; return; }
+    if (f.size > 1500000) { showError("That logo is over 1.5 MB — use a smaller image."); e.target.value = ""; return; }
+    var reader = new FileReader();
+    reader.onload = function () { state.logo = String(reader.result); };
+    reader.readAsDataURL(f);
+  });
+
+  $("restart").addEventListener("click", function (e) {
+    e.preventDefault();
+    location.reload();
+  });
+
+  $("go").addEventListener("click", function () {
+    clearError();
+    if (!state.picks.value) {
+      showError("Set one column to Revenue / amount — without it there is nothing to total.");
+      return;
+    }
+
+    var btn = $("go");
+    btn.disabled = true;
+    btn.textContent = "Drawing the PDF…";
+
+    var summary = aggregate();
+    var periodLabel = "";
+    if (summary.periods.length) {
+      var last = summary.periods[summary.periods.length - 1][0].split("-");
+      var names = ["January","February","March","April","May","June","July",
+                   "August","September","October","November","December"];
+      periodLabel = names[parseInt(last[1], 10) - 1] + " " + last[0];
+    }
+
+    fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: $("title").value || "Report",
+        client: $("client").value || "[CLIENT NAME]",
+        color: $("color").value,
+        currency: $("currency").value.trim(),
+        template: $("template").value,
+        period_label: periodLabel,
+        label_name: state.picks.label || "category",
+        logo: state.logo,
+        summary: summary
+      })
+    }).then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return { error: "Request failed (" + res.status + ")." }; })
+          .then(function (j) { throw new Error(j.error || "Request failed."); });
+      }
+      return res.blob();
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url;
+      a.download = ($("title").value || "report").replace(/[^\w \-]/g, "") + ".pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      btn.disabled = false;
+      btn.textContent = "Generate the PDF";
+    }).catch(function (err) {
+      showError(err.message || "Something went wrong drawing the report.");
+      btn.disabled = false;
+      btn.textContent = "Generate the PDF";
+    });
+  });
+})();
+</script>
+</body>
+</html>
